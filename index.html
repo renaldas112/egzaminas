@@ -5,108 +5,92 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="main.css">
-		<style>
-			#blocker {
-				position: absolute;
-				width: 100%;
-				height: 100%;
-				background-color: rgba(0,0,0,0.5);
-			}
-
-			#instructions {
-				width: 100%;
-				height: 100%;
-
-				display: -webkit-box;
-				display: -moz-box;
-				display: box;
-
-				-webkit-box-orient: horizontal;
-				-moz-box-orient: horizontal;
-				box-orient: horizontal;
-
-				-webkit-box-pack: center;
-				-moz-box-pack: center;
-				box-pack: center;
-
-				-webkit-box-align: center;
-				-moz-box-align: center;
-				box-align: center;
-
-				color: #ffffff;
-				text-align: center;
-				font-family: Arial;
-				font-size: 14px;
-				line-height: 24px;
-
-				cursor: pointer;
-			}
-		</style>
 	</head>
-	<body>
-
-<section id="loading-screen">
-
-	<div id="loader"></div>
-
+	<section id="loading-screen">
+		<div id="loader"></div>
 	</section>
-
+		<body>
 		<div id="blocker">
-
-			<div id="instructions">
-				<span style="font-size:40px">3D Classroom <br> <br>
-				Click to Enter</span>
-				<br /><br />
-				Move: WASD<br/>
-				Jump: SPACE<br/>
-				Look: MOUSE
+			<div id="socials">
+				 <a href="https://www.instagram.com/renaldas_official/"><img src="instagram.png" height="27.5" width="27.5"></a>
+				 <a href="https://www.facebook.com/renaldazzz"><img src="facebook.png" height="27.5" width="27.5"></a>
+				 <a href="https://twitter.com/renaldas_dev"><img src="twitter.png" height="27.5" width="27.5"></a>
+				 <a href="https://github.com/renaldas112"><img src="github.png" height="27.5" width="27.5"></a>
+				 <a href="https://lt.linkedin.com/in/renaldas-sw"><img src="linkedin.png" height="27.5" width="27.5"></a>
 			</div>
-
+			<div id="title">
+			<span style="font-size: 50px;">3D Classroom <br>
+			</div>
+			<div id="Back">
+				<span style="font-size:15px;">Back
+			</div>
+			<div id="Play">
+				<span style="font-size:20px;">Play
+			</div>
+			<div id="Settings">
+				<span style="font-size:20px;">Settings
+			</div>
+			<div id="settings_window">
+				<span style="font-size:30px;">Settings</span><br>
+				<div style="border: 1px solid white; width: 80%;"></div><br>
+				<span style="font-size:15px;">Mouse Sensitivity</span><br>
+				<div class="slidecontainer">
+  			<input type="range" min="1" max="10" value="5" step=1 class="slider" id="myRange">
+				<output></output>
+				</div>
+			</div>
+			<div id="credits">
+				<span style="font-size:20px;">Credits
+			</div>
+			<div id="credits_text">
+				<div style="border: 1px solid black;background-color: black;opacity: 0.5;width: 100%;height: 100%;position: absolute;opacity: 0.1;"></div><br>
+				<span style="font-size:30px;">Credits</span><br><br>
+				<span style="font-size:20px;">Programmed and Graphics by</span><br>
+				Renaldas Barzdaitis <br><br>
+				<span style="font-size:20px;">Models Assets</span><br>
+				Sketchfab <br>
+			</div>
 		</div>
 
-
+	</script>
 		<script type="module">
-
 			import * as THREE from '../build/three.module.js';
-
 			import { PointerLockControls } from './jsmcontrols/PointerLockControls.js';
-
 			import { GLTFLoader } from './jsmcontrols/GLTFLoader.js';
-
+			import {
+				Euler,
+				EventDispatcher,
+				Vector3
+			} from "../../../build/three.module.js";
+			var loader = new THREE.ImageLoader();
+			var initScene, render, renderer, scene, camera, box;
 			var camera, scene, renderer, controls;
-
-			var objects; []
-
-			var raycaster;
-
+			var geometry, material, mesh;
 			var moveForward = false;
 			var moveBackward = false;
 			var moveLeft = false;
 			var moveRight = false;
 			var canJump = false;
-
+			var moveFast = false;
+			var collidableObjects = [];
+			var PLAYERSPEED = 0.5;
+			var PLAYERCOLLISIONDISTANCE = 5;
 			var prevTime = performance.now();
 			var velocity = new THREE.Vector3();
 			var direction = new THREE.Vector3();
 			var color = new THREE.Color();
-
 			init();
 			animate();
 
+
+
 			function init() {
 
-				// const loadingManager = new THREE.LoadingManager( () => {
-				//
-		 		// const loadingScreen = document.getElementById( 'loading-screen' );
-		 		// loadingScreen.classList.add( 'fade-out' );
-				//
-		 		// // optional: remove loader from DOM via event listener
-		 		// loadingScreen.addEventListener( 'transitionend', onTransitionEnd );
-				//
-	 			// } );
-
-				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
-				camera.position.y = 10;
+				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 750 );
+				camera.position.y = 11;
+				camera.position.x = 150;
+				camera.position.z -= 25;
+				camera.rotation.y = Math.PI / 2;
 
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0x6495ED );
@@ -119,9 +103,54 @@
 				controls = new PointerLockControls( camera, document.body );
 
 				var blocker = document.getElementById( 'blocker' );
-				var instructions = document.getElementById( 'instructions' );
+				var title = document.getElementById( 'title' );
+				var credits = document.getElementById( 'credits' );
+				var credits_text = document.getElementById( 'credits_text' );
+				var Back = document.getElementById( 'Back' );
+				var Play = document.getElementById( 'Play' );
+				var Settings = document.getElementById( 'Settings' );
+				var settings_window = document.getElementById( 'settings_window' );
+				var element = document.getElementById('loading-screen');
+				element.classList.add('fade-out');
 
-				instructions.addEventListener( 'click', function () {
+				// click, esc
+
+				Settings.addEventListener( 'click', function () {
+
+					Play.style.display = 'none';
+					blocker.style.display = 'block';
+					Settings.style.display = 'none';
+					Back.style.visibility = 'visible';
+					title.style.display = 'none';
+					credits.style.display = 'none';
+					credits_text.style.display = 'none';
+					settings_window.style.display = 'block';
+				});
+				credits.addEventListener( 'click', function () {
+
+					Play.style.display = 'none';
+					blocker.style.display = 'block';
+					Settings.style.display = 'none';
+					Back.style.visibility = 'visible';
+					title.style.display = 'none';
+					credits.style.display = 'none';
+					credits_text.style.display = 'block';
+					settings_window.style.display = 'none';
+				});
+
+				Back.addEventListener( 'click', function () {
+
+					blocker.style.display = 'block';
+					Play.style.display = '';
+					Settings.style.display = '';
+					Back.style.visibility = 'hidden';
+					title.style.display = '';
+					credits.style.display = '';
+					credits_text.style.display = 'none';
+					settings_window.style.display = 'none';
+				});
+
+				Play.addEventListener( 'click', function () {
 
 					controls.lock();
 
@@ -129,17 +158,27 @@
 
 				controls.addEventListener( 'lock', function () {
 
-					instructions.style.display = 'none';
+					Play.style.display = 'none';
 					blocker.style.display = 'none';
+					Settings.style.display = 'none';
+					Back.style.visibility = 'hidden';
+					credits.style.display = 'none';
 
 				} );
 
 				controls.addEventListener( 'unlock', function () {
 
 					blocker.style.display = 'block';
-					instructions.style.display = '';
+					Play.style.display = '';
+					Settings.style.display = '';
+					Back.style.visibility = 'hidden';
+					credits.style.display = '';
+					title.style.display = '';
+					credits_text.style.display = 'none';
+					settings_window.style.display = 'none';
 
 				} );
+
 
 				scene.add( controls.getObject() );
 
@@ -168,10 +207,13 @@
 							break;
 
 						case 32: // space
-							if ( canJump === true ) velocity.y += 200;
+							if ( canJump === true ) velocity.y += 180;
 							canJump = false;
 							break;
 
+						case 16: // shift
+						moveFast = true;
+						break;
 					}
 
 				};
@@ -200,6 +242,9 @@
 							moveRight = false;
 							break;
 
+						case 16: // shift
+						moveFast = false;
+							break;
 					}
 
 				};
@@ -207,26 +252,331 @@
 				document.addEventListener( 'keydown', onKeyDown, false );
 				document.addEventListener( 'keyup', onKeyUp, false );
 
-				raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
 
 
-//road
-
-		const loader = new GLTFLoader();
-
-		loader.load(
-			'examples/models/gltf/street1/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 5;
-				gltf.scene.rotation.y += Math.PI / 2;
-				gltf.scene.position.y += 0;
-				gltf.scene.position.x -= 124.5;
-				gltf.scene.position.z -= 120;
-
-			},
-
+			// floor
+		var meshFloor1 = new THREE.Mesh(
+		new THREE.PlaneGeometry(220,220,10,10),
+		new THREE.MeshBasicMaterial({color:0x006400, wireframe:false})
 		);
+		meshFloor1.rotation.x -= Math.PI / 2;
+		meshFloor1.position.y -= 0.1;
+		scene.add(meshFloor1);
+
+		var meshFloor = new THREE.Mesh(
+		new THREE.PlaneGeometry(125,100,10,10),
+		new THREE.MeshBasicMaterial({color:0x660000, wireframe:false})
+		);
+		meshFloor.rotation.x -= Math.PI / 2;
+		scene.add(meshFloor);
+
+		var texture = new THREE.TextureLoader().load( 'poster.jpg' );
+		var geometry = new THREE.CubeGeometry( 35, 20, 0.1 );
+		var material = new THREE.MeshBasicMaterial( { map: texture } );
+		mesh = new THREE.Mesh( geometry, material );
+		scene.add( mesh );
+		mesh.position.y +=15;
+		mesh.position.x +=150;
+
+		//coridor
+
+		var meshcoridor = new THREE.Mesh(
+		new THREE.BoxGeometry(125,30,5,1),
+		new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
+		);
+		meshcoridor.position.y +=15.5;
+		meshcoridor.position.x +=125;
+		meshcoridor.position.z +=2.5;
+		scene.add(meshcoridor);
+		collidableObjects.push(meshcoridor);
+
+		var meshcoridor = new THREE.Mesh(
+		new THREE.BoxGeometry(5,31,50.5,1),
+		new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
+		);
+		meshcoridor.position.y +=15.5;
+		meshcoridor.position.x +=190;
+		meshcoridor.position.z -=25;
+		scene.add(meshcoridor);
+		collidableObjects.push(meshcoridor);
+
+		//corridor floor
+
+		var meshcoridorfloor = new THREE.Mesh(
+		new THREE.PlaneGeometry(125,55,10,1),
+		new THREE.MeshBasicMaterial({color:0x660000, wireframe:false})
+		);
+		meshcoridorfloor.rotation.x -= Math.PI / 2;
+		meshcoridorfloor.position.y += 0;
+		meshcoridorfloor.position.x += 125;
+		meshcoridorfloor.position.z -= 25;
+		scene.add(meshcoridorfloor);
+
+		//corridor ceiling
+
+		var meshcCeiling = new THREE.Mesh(
+		new THREE.PlaneGeometry(123, 50, 10, 1),
+		new THREE.MeshLambertMaterial({color:"rgb(239, 239, 239)", side: THREE.DoubleSide, wireframe:false})
+		);
+		meshcCeiling.position.y += 30;
+		meshcCeiling.position.x += 126.5;
+		meshcCeiling.position.z -= 25;
+		meshcCeiling.rotation.x -= Math.PI / 2;
+		meshcCeiling.doubleSided = true;
+		scene.add(meshcCeiling);
+
+		//corridor lamps
+
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x +=100;
+		cube.position.z -=25;
+		scene.add( cube );
+
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x +=150;
+		cube.position.z -=25;
+		scene.add( cube );
+
+		var light = new THREE.PointLight( 0xffffff, 1, 10 );
+		light.position.set( 100, 0, -25);
+		scene.add( light );
+
+		var light = new THREE.PointLight( 0xffffff, 1, 10 );
+		light.position.set( 150, 0, -25);
+		scene.add( light );
+
+		//corridor Windows
+
+		var meshcWall1 = new THREE.Mesh(
+		new THREE.BoxGeometry(7.5,7.5,125,1),
+		new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
+		);
+		meshcWall1.rotation.y -= Math.PI / 2;
+		meshcWall1.position.y +=3.9;
+		meshcWall1.position.x +=125;
+		meshcWall1.position.z -=52.5;
+		scene.add(meshcWall1);
+		collidableObjects.push(meshcWall1);
+
+		var meshcWall2 = new THREE.Mesh(
+		new THREE.BoxGeometry(7.5,11.5,125,1),
+		new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
+		);
+		meshcWall2.rotation.y -= Math.PI / 2;
+		meshcWall2.position.y +=24;
+		meshcWall2.position.x +=125;
+		meshcWall2.position.z -=52.5;
+		scene.add(meshcWall2);
+		collidableObjects.push(meshcWall2);
+
+		var meshcWall3 = new THREE.Mesh(
+		new THREE.BoxGeometry(7.5,11,20,1),
+		new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
+		);
+		meshcWall3.rotation.y -= Math.PI / 2;
+		meshcWall3.position.y +=13;
+		meshcWall3.position.x +=70;
+		meshcWall3.position.z -=52.5;
+		scene.add(meshcWall3);
+		collidableObjects.push(meshcWall3);
+
+		var meshcWall4 = new THREE.Mesh(
+		new THREE.BoxGeometry(7.5,11,20,1),
+		new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
+		);
+		meshcWall4.rotation.y -= Math.PI / 2;
+		meshcWall4.position.y +=13;
+		meshcWall4.position.x +=110;
+		meshcWall4.position.z -=52.5;
+		scene.add(meshcWall4);
+		collidableObjects.push(meshcWall4);
+
+		var meshcWall5 = new THREE.Mesh(
+		new THREE.BoxGeometry(7.5,11,20,1),
+		new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
+		);
+		meshcWall5.rotation.y -= Math.PI / 2;
+		meshcWall5.position.y +=13;
+		meshcWall5.position.x +=150;
+		meshcWall5.position.z -=52.5;
+		scene.add(meshcWall5);
+		collidableObjects.push(meshcWall5);
+
+		var meshcWall6 = new THREE.Mesh(
+		new THREE.BoxGeometry(7.5,11,7.5,1),
+		new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
+		);
+		meshcWall6.rotation.y -= Math.PI / 2;
+		meshcWall6.position.y +=13;
+		meshcWall6.position.x +=183.75;
+		meshcWall6.position.z -=52.5;
+		scene.add(meshcWall6);
+		collidableObjects.push(meshcWall6);
+
+		var meshcWindow1 = new THREE.Mesh(
+		new THREE.BoxGeometry(1,10,19,1),
+		new THREE.MeshLambertMaterial({color:0xffffff, opacity: 0.3, transparent: true, wireframe:false})
+		);
+		meshcWindow1.rotation.y -= Math.PI / 2;
+		meshcWindow1.position.y +=12.5;
+		meshcWindow1.position.x +=90;
+		meshcWindow1.position.z -=52.5;
+		scene.add(meshcWindow1);
+		collidableObjects.push(meshcWindow1);
+
+		var meshcWindow2 = new THREE.Mesh(
+		new THREE.BoxGeometry(1,10,19,1),
+		new THREE.MeshLambertMaterial({color:0xffffff, opacity: 0.3, transparent: true, wireframe:false})
+		);
+		meshcWindow2.rotation.y -= Math.PI / 2;
+		meshcWindow2.position.y +=12.5;
+		meshcWindow2.position.x +=130;
+		meshcWindow2.position.z -=52.5;
+		scene.add(meshcWindow2);
+		collidableObjects.push(meshcWindow2);
+
+		var meshcWindow3 = new THREE.Mesh(
+		new THREE.BoxGeometry(1,10,19,1),
+		new THREE.MeshLambertMaterial({color:0xffffff, opacity: 0.3, transparent: true, wireframe:false})
+		);
+		meshcWindow3.rotation.y -= Math.PI / 2;
+		meshcWindow3.position.y +=12.5;
+		meshcWindow3.position.x +=170;
+		meshcWindow3.position.z -=52.5;
+		scene.add(meshcWindow3);
+		collidableObjects.push(meshcWindow3);
+
+		//corridor window details
+
+		var geometry = new THREE.BoxGeometry( 20, 0.5, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=18;
+		cube.position.x +=90;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 20, 0.5, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=7.9;
+		cube.position.x +=90;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 0.5, 10, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=13;
+		cube.position.x +=80.25;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 0.5, 10, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=13;
+		cube.position.x +=99.75;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 20, 0.5, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=18;
+		cube.position.x +=130;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 20, 0.5, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=18;
+		cube.position.x +=170;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 20, 0.5, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=7.9;
+		cube.position.x +=130;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 20, 0.5, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=7.9;
+		cube.position.x +=170;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 0.5, 10, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=13;
+		cube.position.x +=120.25;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 0.5, 10, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=13;
+		cube.position.x +=139.75;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 0.5, 10, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=13;
+		cube.position.x +=160.25;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		var geometry = new THREE.BoxGeometry( 0.5, 10, 7.5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=13;
+		cube.position.x +=179.75;
+		cube.position.z -=52.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+		//road
+
+	const loader = new GLTFLoader();
+
+loader.load(
+	'examples/models/gltf/street1/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 5;
+		gltf.scene.rotation.y += Math.PI / 2;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 124.5;
+		gltf.scene.position.z -= 120;
+	},
+);
 
 loader.load(
 	'examples/models/gltf/street1/scene.gltf',
@@ -237,9 +587,7 @@ loader.load(
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x -= 124.5;
 		gltf.scene.position.z += 0;
-
 	},
-
 );
 
 loader.load(
@@ -332,51 +680,49 @@ loader.load(
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x -= 81;
 		gltf.scene.position.z += 83.5;
-
 	},
 
 );
 
 		//lamp posts
 
-		loader.load(
-			'examples/models/gltf/lamp/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.01;
-				gltf.scene.position.y += 0;
-				gltf.scene.position.x -= 100;
-				gltf.scene.position.z += 0;
+loader.load(
+	'examples/models/gltf/lamp/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.01;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 100;
+		gltf.scene.position.z += 0;
+	},
 
-			},
+);
 
-		);
+loader.load(
+	'examples/models/gltf/lamp/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.01;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 100;
+		gltf.scene.position.z += 50;
 
-		loader.load(
-			'examples/models/gltf/lamp/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.01;
-				gltf.scene.position.y += 0;
-				gltf.scene.position.x -= 100;
-				gltf.scene.position.z += 50;
+	},
 
-			},
+);
 
-		);
+loader.load(
+	'examples/models/gltf/lamp/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.01;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 100;
+		gltf.scene.position.z -= 50;
 
-		loader.load(
-			'examples/models/gltf/lamp/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.01;
-				gltf.scene.position.y += 0;
-				gltf.scene.position.x -= 100;
-				gltf.scene.position.z -= 50;
+	},
 
-			},
-
-		);
+);
 
 		//houses
 
@@ -388,131 +734,114 @@ loader.load(
 		cube.position.x -= 250;
 		cube.position.z -= 50;
 
-		loader.load(
-			'examples/models/gltf/house1/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.08;
-				gltf.scene.rotation.y += Math.PI / 1;
-				gltf.scene.position.y += 0;
-				gltf.scene.position.x -= 276;
-				gltf.scene.position.z -= 50;
 
-			},
+loader.load(
+	'examples/models/gltf/house1/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.08;
+		gltf.scene.rotation.y += Math.PI / 1;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 276;
+		gltf.scene.position.z -= 50;
+		collidableObjects.push(gltf.scene);
 
-		);
+	},
 
-		loader.load(
-			'examples/models/gltf/house1/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.08;
-				gltf.scene.rotation.y += Math.PI / 1;
-				gltf.scene.position.y += 0;
-				gltf.scene.position.x -= 276;
-				gltf.scene.position.z += 160;
+);
 
-			},
+loader.load(
+	'examples/models/gltf/house1/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.08;
+		gltf.scene.rotation.y += Math.PI / 1;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 276;
+		gltf.scene.position.z += 160;
 
-		);
+	},
 
-		loader.load(
-			'examples/models/gltf/house2/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.3;
-				gltf.scene.rotation.y += Math.PI / 2;
-				gltf.scene.position.y += 0;
-				gltf.scene.position.x -= 154.5;
-				gltf.scene.position.z -= 80;
+);
 
-			},
+loader.load(
+	'examples/models/gltf/house2/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.3;
+		gltf.scene.rotation.y += Math.PI / 2;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 154.5;
+		gltf.scene.position.z -= 80;
 
-		);
+	},
 
-		loader.load(
-			'examples/models/gltf/house2/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.3;
-				gltf.scene.rotation.y += Math.PI / 2;
-				gltf.scene.position.y += 0;
-				gltf.scene.position.x -= 154.5;
-				gltf.scene.position.z -= 180;
+);
 
-			},
+loader.load(
+	'examples/models/gltf/house2/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.3;
+		gltf.scene.rotation.y += Math.PI / 2;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 154.5;
+		gltf.scene.position.z -= 180;
 
-		);
+	},
+
+);
 
 
 
-				loader.load(
-					'examples/models/gltf/sidewalk/scene.gltf',
-					function ( gltf ) {
-						scene.add( gltf.scene );
-						gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 1;
-						gltf.scene.rotation.y += Math.PI / 1;
-						gltf.scene.position.y += 0;
-						gltf.scene.position.x -= 156;
-						gltf.scene.position.z -= 42.5;
+loader.load(
+	'examples/models/gltf/sidewalk/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 1;
+		gltf.scene.rotation.y += Math.PI / 1;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 156;
+		gltf.scene.position.z -= 42.5;
 
-					},
+	},
 
-				);
+);
 
-				loader.load(
-					'examples/models/gltf/sidewalk/scene.gltf',
-					function ( gltf ) {
-						scene.add( gltf.scene );
-						gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 1;
-						gltf.scene.rotation.y += Math.PI / 1;
-						gltf.scene.position.y += 0;
-						gltf.scene.position.x -= 156;
-						gltf.scene.position.z -= 115;
+loader.load(
+	'examples/models/gltf/sidewalk/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 1;
+		gltf.scene.rotation.y += Math.PI / 1;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 156;
+		gltf.scene.position.z -= 115;
 
-					},
+	},
 
-				);
+);
+loader.load(
+	'examples/models/gltf/sidewalk/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 1.80;
+		gltf.scene.rotation.y += Math.PI / 2;
+		gltf.scene.position.y -= 1;
+		gltf.scene.position.x -= 205;
+		gltf.scene.position.z -= 33;
 
-				loader.load(
-					'examples/models/gltf/sidewalk/scene.gltf',
-					function ( gltf ) {
-						scene.add( gltf.scene );
-						gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 1.80;
-						gltf.scene.rotation.y += Math.PI / 2;
-						gltf.scene.position.y -= 1;
-						gltf.scene.position.x -= 205;
-						gltf.scene.position.z -= 33;
+	},
 
-					},
+);
 
-				);
 
-		// floor
-
-		var meshFloor1 = new THREE.Mesh(
-		new THREE.PlaneGeometry(220,220,10,10),
-		new THREE.MeshBasicMaterial({color:0x006400, wireframe:false})
-		);
-		meshFloor1.rotation.x -= Math.PI / 2;
-		meshFloor1.position.y -= 0.1;
-		scene.add(meshFloor1);
-
-		var meshFloor = new THREE.Mesh(
-    new THREE.PlaneGeometry(125,100,10,10),
-    new THREE.MeshBasicMaterial({color:0x660000, wireframe:false})
-  	);
-  	meshFloor.rotation.x -= Math.PI / 2;
-  	scene.add(meshFloor);
-
-		//table models
+	//table models
 
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 5;
@@ -522,12 +851,20 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x -= 26.5;
+		cube.position.z += 34.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 20;
@@ -537,12 +874,19 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x -= 11.5;
+		cube.position.z += 34.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 35;
@@ -552,12 +896,19 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x += 3.5;
+		cube.position.z += 34.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 50;
@@ -567,12 +918,19 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x += 18.5;
+		cube.position.z += 34.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 5;
@@ -582,12 +940,19 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x -= 26.5;
+		cube.position.z += 14.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 20;
@@ -597,12 +962,20 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x -= 11.5;
+		cube.position.z += 14.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 35;
@@ -612,12 +985,19 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x += 3.5;
+		cube.position.z += 14.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 50;
@@ -627,12 +1007,19 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x += 18.5;
+		cube.position.z += 14.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 5;
@@ -642,12 +1029,19 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x -= 26.5;
+		cube.position.z -= 4.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 20;
@@ -657,12 +1051,19 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x -= 11.5;
+		cube.position.z -= 4.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 35;
@@ -672,12 +1073,19 @@ loader.load(
 
 );
 
+		var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 5;
+		cube.position.x += 3.5;
+		cube.position.z -= 4.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
+
 loader.load(
 	'examples/models/gltf/school_chair/scene.gltf',
 	function ( gltf ) {
-
 		scene.add( gltf.scene );
-
 		gltf.scene.rotation.y += Math.PI / 2;
 		gltf.scene.position.y += 0;
 		gltf.scene.position.x += 50;
@@ -687,50 +1095,59 @@ loader.load(
 
 );
 
-		//paintings
+	var geometry = new THREE.BoxGeometry( 6, 6, 6 );
+	var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+	var cube = new THREE.Mesh( geometry, material );
+	cube.position.y += 5;
+	cube.position.x += 18.5;
+	cube.position.z -= 4.5;
+	scene.add( cube );
+	collidableObjects.push(cube);
 
-		loader.load(
-			'examples/models/gltf/painting1/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
- 				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 7.5;
-				gltf.scene.position.y += 12.5;
-				gltf.scene.position.x -= 57.2;
-				gltf.scene.position.z += 35;
+	// paintings
 
-			},
+	loader.load(
+		'examples/models/gltf/painting1/scene.gltf',
+		function ( gltf ) {
+			scene.add( gltf.scene );
+ 			gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 7.5;
+			gltf.scene.position.y += 12.5;
+			gltf.scene.position.x -= 57.2;
+			gltf.scene.position.z += 35;
 
-		);
+		},
 
-		loader.load(
-			'examples/models/gltf/painting2/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 10;
-				gltf.scene.position.y += 12.5;
-				gltf.scene.position.x -= 57.4;
-				gltf.scene.position.z += 0;
+	);
 
-			},
+	loader.load(
+		'examples/models/gltf/painting2/scene.gltf',
+		function ( gltf ) {
+			scene.add( gltf.scene );
+			gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 10;
+			gltf.scene.position.y += 12.5;
+			gltf.scene.position.x -= 57.4;
+			gltf.scene.position.z += 0;
 
-		);
+		},
 
-		loader.load(
-			'examples/models/gltf/painting3/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.1;
-				gltf.scene.rotation.y += Math.PI / 2;
-				gltf.scene.position.y += 12.5;
-				gltf.scene.position.x -= 57.4;
-				gltf.scene.position.z -= 33.5;
+	);
 
-			},
+	loader.load(
+		'examples/models/gltf/painting3/scene.gltf',
+		function ( gltf ) {
+			scene.add( gltf.scene );
+			gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.1;
+			gltf.scene.rotation.y += Math.PI / 2;
+			gltf.scene.position.y += 12.5;
+			gltf.scene.position.x -= 57.4;
+			gltf.scene.position.z -= 33.5;
 
-		);
+		},
+
+	);
 
 
-		//books
+	//books
 
 		loader.load(
 			'examples/models/gltf/books1/scene.gltf',
@@ -746,19 +1163,19 @@ loader.load(
 
 		);
 
-		loader.load(
-			'examples/models/gltf/books1/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 2;
-				gltf.scene.rotation.y -= Math.PI / 1;
-				gltf.scene.position.y += 19;
-				gltf.scene.position.x += 57;
-				gltf.scene.position.z += 11;
+loader.load(
+	'examples/models/gltf/books1/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 2;
+		gltf.scene.rotation.y -= Math.PI / 1;
+		gltf.scene.position.y += 19;
+		gltf.scene.position.x += 57;
+		gltf.scene.position.z += 11;
 
-			},
+	},
 
-		);
+);
 
 		loader.load(
 			'examples/models/gltf/books2/scene.gltf',
@@ -774,74 +1191,99 @@ loader.load(
 
 		);
 
-		//spinta
+//spinta
 
-		loader.load(
-			'examples/models/gltf/sekcija/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
- 				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.15;
-				gltf.scene.rotation.y += Math.PI / 2;
-				gltf.scene.position.y += 0.1;
-				gltf.scene.position.x += 57;
-				gltf.scene.position.z += 15;
+loader.load(
+	'examples/models/gltf/sekcija/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.15;
+		gltf.scene.rotation.y += Math.PI / 2;
+		gltf.scene.position.y += 0.1;
+		gltf.scene.position.x += 57;
+		gltf.scene.position.z += 15;
 
-			},
+	},
 
-		);
+);
+		var geometry = new THREE.BoxGeometry( 5, 10, 13 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 6;
+		cube.position.x += 56;
+		cube.position.z += 15;
+		scene.add( cube );
+		collidableObjects.push(cube);
 
 		var meshshelve = new THREE.Mesh(
 		new THREE.BoxGeometry(0.5,28,13,1),
 		new THREE.MeshLambertMaterial({color:0x8B4513, wireframe:false})
 		);
-
 		scene.add(meshshelve);
 		meshshelve.position.y +=10;
 		meshshelve.position.x +=58.5;
 		meshshelve.position.z +=15;
 
-		//servers
+//servers
 
-		loader.load(
-			'examples/models/gltf/servers/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 10;
-				gltf.scene.position.y += 10;
-				gltf.scene.position.x -= 50;
-				gltf.scene.position.z += 42.5;
+loader.load(
+	'examples/models/gltf/servers/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 10;
+		gltf.scene.position.y += 10;
+		gltf.scene.position.x -= 50;
+		gltf.scene.position.z += 42.5;
 
-			},
+	},
 
-		);
+);
 
-		loader.load(
-			'examples/models/gltf/servers/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 10;
-				gltf.scene.position.y += 10;
-				gltf.scene.position.x -= 42.5;
-				gltf.scene.position.z += 42.5;
+loader.load(
+	'examples/models/gltf/servers/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 10;
+		gltf.scene.position.y += 10;
+		gltf.scene.position.x -= 42.5;
+		gltf.scene.position.z += 42.5;
 
-			},
+	},
 
-		);
+);
 
-		//table
-		loader.load(
-			'examples/models/gltf/onlytable/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
- 				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.1;
-				gltf.scene.rotation.y += Math.PI / 2;
-				gltf.scene.position.y += 2.5;
-				gltf.scene.position.x += 53;
-				gltf.scene.position.z += 35;
+		var geometry = new THREE.BoxGeometry( 13, 10, 5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 7;
+		cube.position.x -= 46.5;
+		cube.position.z += 42;
+		scene.add( cube );
+		collidableObjects.push(cube);
 
-			},
+//table
+loader.load(
+	'examples/models/gltf/onlytable/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.1;
+		gltf.scene.rotation.y += Math.PI / 2;
+		gltf.scene.position.y += 2.5;
+		gltf.scene.position.x += 53;
+		gltf.scene.position.z += 35;
 
-		);
+	},
+
+);
+
+		var geometry = new THREE.BoxGeometry( 6, 10, 15 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 7;
+		cube.position.x += 53;
+		cube.position.z += 35;
+		scene.add( cube );
+		collidableObjects.push(cube);
 
 		loader.load(
 			'examples/models/gltf/case/scene.gltf',
@@ -950,115 +1392,135 @@ loader.load(
 
 		);
 
-			//teacher's desk
+//teacher's desk
 
-			loader.load(
-				'examples/models/gltf/computerchair/scene.gltf',
-				function ( gltf ) {
-					scene.add( gltf.scene );
-					gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 2;
-					gltf.scene.position.y += 0;
-					gltf.scene.position.x -= 37.5;
-					gltf.scene.position.z -= 37.5;
+loader.load(
+	'examples/models/gltf/computerchair/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 2;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 37.5;
+		gltf.scene.position.z -= 37.5;
 
-				},
+	},
 
-			);
+);
 
-			loader.load(
-				'examples/models/gltf/desk/scene.gltf',
-				function ( gltf ) {
-					scene.add( gltf.scene );
-					gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.04;
-					gltf.scene.rotation.y += Math.PI / 1;
-					gltf.scene.position.y += 0;
-					gltf.scene.position.x -= 37.5;
-					gltf.scene.position.z -= 32.5;
+		var geometry = new THREE.BoxGeometry( 5, 10, 5 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 7;
+		cube.position.x -= 37.5;
+		cube.position.z -= 38;
+		scene.add( cube );
+		collidableObjects.push(cube);
 
-				},
+loader.load(
+	'examples/models/gltf/desk/scene.gltf',
+	function ( gltf ) {
+		scene.add( gltf.scene );
+		gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.04;
+		gltf.scene.rotation.y += Math.PI / 1;
+		gltf.scene.position.y += 0;
+		gltf.scene.position.x -= 37.5;
+		gltf.scene.position.z -= 32.5;
 
-			);
+	},
 
-			loader.load(
-				'examples/models/gltf/computer/scene.gltf',
-				function ( gltf ) {
-					scene.add( gltf.scene );
-					gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 3.5;
-					gltf.scene.rotation.y += Math.PI / 1;
-					gltf.scene.position.y += 9.5;
-					gltf.scene.position.x -= 40;
-					gltf.scene.position.z -= 32.5;
+);
 
-				},
+		var geometry = new THREE.BoxGeometry( 15, 10, 7 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9, opacity: 0, transparent: true });
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y += 7;
+		cube.position.x -= 37.5;
+		cube.position.z -= 32.5;
+		scene.add( cube );
+		collidableObjects.push(cube);
 
-			);
 
-			loader.load(
-				'examples/models/gltf/desktop/scene.gltf',
-				function ( gltf ) {
-					scene.add( gltf.scene );
-					gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.1;
-					gltf.scene.rotation.y -= Math.PI / 2;
-					gltf.scene.position.y += 0;
-					gltf.scene.position.x -= 44;
-					gltf.scene.position.z -= 32.5;
 
-				},
+loader.load(
+		'examples/models/gltf/computer/scene.gltf',
+		function ( gltf ) {
+			scene.add( gltf.scene );
+			gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 3.5;
+			gltf.scene.rotation.y += Math.PI / 1;
+			gltf.scene.position.y += 9.5;
+			gltf.scene.position.x -= 40;
+			gltf.scene.position.z -= 32.5;
 
-			);
+		},
 
-			loader.load(
-				'examples/models/gltf/macbook/scene.gltf',
-				function ( gltf ) {
-					scene.add( gltf.scene );
-					gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.5;
-					gltf.scene.rotation.y -= Math.PI / 1;
-					gltf.scene.position.y += 7.14;
-					gltf.scene.position.x -= 33.5;
-					gltf.scene.position.z -= 33;
+	);
 
-				},
+	loader.load(
+		'examples/models/gltf/desktop/scene.gltf',
+		function ( gltf ) {
+			scene.add( gltf.scene );
+			gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.1;
+			gltf.scene.rotation.y -= Math.PI / 2;
+			gltf.scene.position.y += 0;
+			gltf.scene.position.x -= 44;
+			gltf.scene.position.z -= 32.5;
 
-			);
+		},
 
-			//projector
+	);
 
-			loader.load(
-				'examples/models/gltf/projector/scene.gltf',
-				function ( gltf ) {
-					scene.add( gltf.scene );
-					gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.05;
-					gltf.scene.rotation.y -= Math.PI / 1;
-					gltf.scene.position.y += 24.7;
-					gltf.scene.position.x += 0;
-					gltf.scene.position.z += 15;
+	loader.load(
+		'examples/models/gltf/macbook/scene.gltf',
+		function ( gltf ) {
+			scene.add( gltf.scene );
+			gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.5;
+			gltf.scene.rotation.y -= Math.PI / 1;
+			gltf.scene.position.y += 7.14;
+			gltf.scene.position.x -= 33.5;
+			gltf.scene.position.z -= 33;
 
-				},
+		},
 
-			);
+	);
 
-			var geometry = new THREE.ConeGeometry( 7.5, 65, 10 );
-			var material = new THREE.MeshBasicMaterial( {color: 0xffffff, opacity: 0.2, transparent: true });
-			var cone = new THREE.Mesh( geometry, material );
-			scene.add( cone );
-			cone.rotation.x += Math.PI / 2.3;
-			cone.position.y += 19;
-			cone.position.x += 0.4;
-			cone.position.z -= 17.5;
+	//projector
 
-			loader.load(
-				'examples/models/gltf/video/scene.gltf',
-				function ( gltf ) {
-					scene.add( gltf.scene );
-					gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.5;
-					gltf.scene.rotation.x += Math.PI / 2;
-					gltf.scene.position.y += 12.6;
-					gltf.scene.position.x += 0.5;
-					gltf.scene.position.z -= 46.5;
+	loader.load(
+		'examples/models/gltf/projector/scene.gltf',
+		function ( gltf ) {
+			scene.add( gltf.scene );
+			gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.05;
+			gltf.scene.rotation.y -= Math.PI / 1;
+			gltf.scene.position.y += 24.7;
+			gltf.scene.position.x += 0;
+			gltf.scene.position.z += 15;
 
-				},
+		},
 
-			);
+	);
+
+		var geometry = new THREE.ConeGeometry( 7.5, 65, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff, opacity: 0.2, transparent: true });
+		var cone = new THREE.Mesh( geometry, material );
+		scene.add( cone );
+		cone.rotation.x += Math.PI / 2.3;
+		cone.position.y += 19;
+		cone.position.x += 0.4;
+		cone.position.z -= 17.5;
+
+	loader.load(
+		'examples/models/gltf/video/scene.gltf',
+		function ( gltf ) {
+			scene.add( gltf.scene );
+			gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 0.5;
+			gltf.scene.rotation.x += Math.PI / 2;
+			gltf.scene.position.y += 12.6;
+			gltf.scene.position.x += 0.5;
+			gltf.scene.position.z -= 46.5;
+
+		},
+
+	);
 
 			//Ceiling
 
@@ -1066,84 +1528,83 @@ loader.load(
   	new THREE.PlaneGeometry(120, 100, 10, 1),
   	new THREE.MeshLambertMaterial({color:"rgb(239, 239, 239)", side: THREE.DoubleSide, wireframe:false})
   	);
-  	meshCeiling.position.y +=28;
+  	meshCeiling.position.y +=29.5;
   	meshCeiling.rotation.x -= Math.PI / 2;
   	meshCeiling.doubleSided = true;
   	scene.add(meshCeiling);
 
 			//lamps
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x +=35;
+		cube.position.z +=30;
+		scene.add( cube );
 
-			var geometry = new THREE.BoxGeometry( 10, 10, 10 );
-			var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-			var cube = new THREE.Mesh( geometry, material );
-			cube.position.y +=32;
-			cube.position.x +=35;
-			cube.position.z +=30;
-			scene.add( cube );
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x +=35;
+		cube.position.z +=0;
+		scene.add( cube );
 
-			var geometry = new THREE.BoxGeometry( 10, 10, 10 );
-			var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-			var cube = new THREE.Mesh( geometry, material );
-			cube.position.y +=32;
-			cube.position.x +=35;
-			cube.position.z +=0;
-			scene.add( cube );
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x +=35;
+		cube.position.z -=30;
+		scene.add( cube );
 
-			var geometry = new THREE.BoxGeometry( 10, 10, 10 );
-			var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-			var cube = new THREE.Mesh( geometry, material );
-			cube.position.y +=32;
-			cube.position.x +=35;
-			cube.position.z -=30;
-			scene.add( cube );
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x +=0;
+		cube.position.z -=30;
+		scene.add( cube );
 
-			var geometry = new THREE.BoxGeometry( 10, 10, 10 );
-			var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-			var cube = new THREE.Mesh( geometry, material );
-			cube.position.y +=32;
-			cube.position.x +=0;
-			cube.position.z -=30;
-			scene.add( cube );
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x +=0;
+		cube.position.z +=0;
+		scene.add( cube );
 
-			var geometry = new THREE.BoxGeometry( 10, 10, 10 );
-			var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-			var cube = new THREE.Mesh( geometry, material );
-			cube.position.y +=32;
-			cube.position.x +=0;
-			cube.position.z +=0;
-			scene.add( cube );
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x +=0;
+		cube.position.z +=30;
+		scene.add( cube );
 
-			var geometry = new THREE.BoxGeometry( 10, 10, 10 );
-			var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-			var cube = new THREE.Mesh( geometry, material );
-			cube.position.y +=32;
-			cube.position.x +=0;
-			cube.position.z +=30;
-			scene.add( cube );
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x -=35;
+		cube.position.z -=30;
+		scene.add( cube );
 
-			var geometry = new THREE.BoxGeometry( 10, 10, 10 );
-			var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-			var cube = new THREE.Mesh( geometry, material );
-			cube.position.y +=32;
-			cube.position.x -=35;
-			cube.position.z -=30;
-			scene.add( cube );
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x -=35;
+		cube.position.z +=0;
+		scene.add( cube );
 
-			var geometry = new THREE.BoxGeometry( 10, 10, 10 );
-			var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-			var cube = new THREE.Mesh( geometry, material );
-			cube.position.y +=32;
-			cube.position.x -=35;
-			cube.position.z +=0;
-			scene.add( cube );
-
-			var geometry = new THREE.BoxGeometry( 10, 10, 10 );
-			var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-			var cube = new THREE.Mesh( geometry, material );
-			cube.position.y +=32;
-			cube.position.x -=35;
-			cube.position.z +=30;
-			scene.add( cube );
+		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+		var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		var cube = new THREE.Mesh( geometry, material );
+		cube.position.y +=33.5;
+		cube.position.x -=35;
+		cube.position.z +=30;
+		scene.add( cube );
 
 		var light = new THREE.PointLight( 0xffffff, 1, 25 );
 		light.position.set( 35, 20, 30);
@@ -1184,74 +1645,57 @@ loader.load(
 			//WALLS
 
   	var meshWall1 = new THREE.Mesh(
-  	new THREE.BoxGeometry(125,30,0.5,1),
+  	new THREE.BoxGeometry(125,32,0.5,1),
   	new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
 		);
   	meshWall1.position.y +=13.5;
   	meshWall1.position.x +=0;
   	meshWall1.position.z +=50;
   	scene.add(meshWall1);
+		collidableObjects.push(meshWall1);
 
   	var meshWall2 = new THREE.Mesh(
-  	new THREE.BoxGeometry(125,30,5,1),
+  	new THREE.BoxGeometry(125,32,5,1),
   	new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
 		);
   	meshWall2.position.y +=13.5;
   	meshWall2.position.x +=0;
   	meshWall2.position.z -=52.5;
   	scene.add(meshWall2);
-
-		//door,
-
-		var meshdoor = new THREE.Mesh(
-		new THREE.BoxGeometry(0.5,18.5,12.55,1),
-		new THREE.MeshLambertMaterial({color:0xFfffff, wireframe:false})
-		);
-
-		scene.add(meshdoor);
-		meshdoor.position.y +=9.5;
-		meshdoor.position.x +=62.5;
-		meshdoor.position.z -=26.3;
-
-
-// var render = function () {
-//     requestAnimationFrame( render );
-//
-//     meshdoor.rotation.y += 0.01;
-//
-// };
-//
-// render();
+		collidableObjects.push(meshWall2);
 
   	var meshWall3 = new THREE.Mesh(
-  	new THREE.BoxGeometry(70,30,5,1),
+  	new THREE.BoxGeometry(70,32,5,1),
   	new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
 		);
   	meshWall3.rotation.y -= Math.PI / 2;
-  	meshWall3.position.y +=13.5;
+  	meshWall3.position.y +=14;
   	meshWall3.position.x +=62.5;
   	meshWall3.position.z +=15;
   	scene.add(meshWall3);
+		collidableObjects.push(meshWall3);
 
 		var meshWall31 = new THREE.Mesh(
-  	new THREE.BoxGeometry(17.5,30,5,1),
+  	new THREE.BoxGeometry(17.5,32,5,1),
   	new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
 		);
   	meshWall31.rotation.y -= Math.PI / 2;
-  	meshWall31.position.y +=13.5;
+  	meshWall31.position.y +=14;
   	meshWall31.position.x +=62.5;
   	meshWall31.position.z -=41.3;
   	scene.add(meshWall31);
+		collidableObjects.push(meshWall31);
 
 		var meshWall32 = new THREE.Mesh(
-  	new THREE.BoxGeometry(12.6,8,5,1),
+  	new THREE.BoxGeometry(12.6,11,5,1),
   	new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
 		);
   	meshWall32.rotation.y -= Math.PI / 2;
-  	meshWall32.position.y +=23;
+  	meshWall32.position.y +=24.5;
   	meshWall32.position.x +=62.5;
   	meshWall32.position.z -=26.3;
   	scene.add(meshWall32);
+		collidableObjects.push(meshWall32);
 
 		var meshWall33 = new THREE.Mesh(
   	new THREE.BoxGeometry(12.6,0.5,5,1),
@@ -1262,6 +1706,19 @@ loader.load(
   	meshWall33.position.x +=62.5;
   	meshWall33.position.z -=26.3;
   	scene.add(meshWall33);
+		collidableObjects.push(meshWall33);
+
+		//door,
+
+		var meshdoor = new THREE.Mesh(
+		new THREE.BoxGeometry(0.5,18.5,12.55,1),
+		new THREE.MeshLambertMaterial({color:0xFfffff, wireframe:false})
+		);
+		scene.add(meshdoor);
+		meshdoor.rotation.y +=Math.PI / 2;
+		meshdoor.position.y +=9.5;
+		meshdoor.position.x +=58;
+		meshdoor.position.z -=20;
 
 		//handle
 
@@ -1271,61 +1728,66 @@ loader.load(
 		);
 		meshhandle.rotation.y -= Math.PI / 2;
 		meshhandle.position.y +=9.5;
-		meshhandle.position.x +=62.5;
-		meshhandle.position.z -=31.5;
+		meshhandle.position.x +=53;
+		meshhandle.position.z -=20.5;
 		scene.add(meshhandle);
 
 		//Windows
 
   	var meshWall4 = new THREE.Mesh(
-  	new THREE.BoxGeometry(100,7,5,1),
+  	new THREE.BoxGeometry(100,7.5,5,1),
   	new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
 		);
   	meshWall4.rotation.y -= Math.PI / 2;
-  	meshWall4.position.y +=4;
+  	meshWall4.position.y +=3.9;
   	meshWall4.position.x -=60;
   	meshWall4.position.z +=0;
   	scene.add(meshWall4);
+		collidableObjects.push(meshWall4);
 
 		var meshWall5 = new THREE.Mesh(
-  	new THREE.BoxGeometry(100,10,5,1),
+  	new THREE.BoxGeometry(100,11.5,5,1),
   	new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
 		);
   	meshWall5.rotation.y -= Math.PI / 2;
-  	meshWall5.position.y +=23;
+  	meshWall5.position.y +=24;
   	meshWall5.position.x -=60;
   	meshWall5.position.z +=0;
   	scene.add(meshWall5);
+		collidableObjects.push(meshWall5);
 
 		var meshWall6 = new THREE.Mesh(
   	new THREE.BoxGeometry(20,11,5,1),
   	new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
 		);
   	meshWall6.rotation.y -= Math.PI / 2;
-  	meshWall6.position.y +=12.5;
+  	meshWall6.position.y +=13;
   	meshWall6.position.x -=60;
   	meshWall6.position.z +=40;
   	scene.add(meshWall6);
+		collidableObjects.push(meshWall6);
 
 		var meshWall7 = new THREE.Mesh(
   	new THREE.BoxGeometry(20,11,5,1),
   	new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
 		);
   	meshWall7.rotation.y -= Math.PI / 2;
-  	meshWall7.position.y +=12.5;
+  	meshWall7.position.y +=13;
   	meshWall7.position.x -=60;
   	meshWall7.position.z +=0;
   	scene.add(meshWall7);
+		collidableObjects.push(meshWall7);
 
 		var meshWall8 = new THREE.Mesh(
   	new THREE.BoxGeometry(20,11,5,1),
   	new THREE.MeshLambertMaterial({color:0xF1C232, wireframe:false})
 		);
   	meshWall8.rotation.y -= Math.PI / 2;
-  	meshWall8.position.y +=12.5;
+  	meshWall8.position.y +=13;
   	meshWall8.position.x -=60;
   	meshWall8.position.z -=40;
   	scene.add(meshWall8);
+		collidableObjects.push(meshWall8);
 
 		var meshWindow1 = new THREE.Mesh(
   	new THREE.BoxGeometry(19,10,1,1),
@@ -1336,6 +1798,7 @@ loader.load(
   	meshWindow1.position.x -=60;
   	meshWindow1.position.z -=20;
   	scene.add(meshWindow1);
+		collidableObjects.push(meshWindow1);
 
 		var meshWindow2 = new THREE.Mesh(
 		new THREE.BoxGeometry(19,10,1,1),
@@ -1346,8 +1809,8 @@ loader.load(
 		meshWindow2.position.x -=60;
 		meshWindow2.position.z +=20;
 		scene.add(meshWindow2);
-
-		//floor details
+		collidableObjects.push(meshWindow2);
+//floor details
 
 		var geometry = new THREE.BoxGeometry( 120, 2.5, 2 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
@@ -1397,7 +1860,7 @@ loader.load(
 		cube.position.z -=0;
 		scene.add( cube );
 
-		//ceiling details
+//ceiling details
 
 		var geometry = new THREE.BoxGeometry( 120, 2.5, 2 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
@@ -1436,34 +1899,38 @@ loader.load(
 		var geometry = new THREE.BoxGeometry( 5, 0.5, 20 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
 		var cube = new THREE.Mesh( geometry, material );
-		cube.position.y +=17.8;
+		cube.position.y +=18;
 		cube.position.x -=60;
 		cube.position.z +=20;
 		scene.add( cube );
+		collidableObjects.push(cube);
 
 		var geometry = new THREE.BoxGeometry( 5, 0.5, 20 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
 		var cube = new THREE.Mesh( geometry, material );
-		cube.position.y +=17.8;
+		cube.position.y +=18;
 		cube.position.x -=60;
 		cube.position.z -=20;
 		scene.add( cube );
+		collidableObjects.push(cube);
 
 		var geometry = new THREE.BoxGeometry( 5, 0.5, 20 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
 		var cube = new THREE.Mesh( geometry, material );
-		cube.position.y +=7.8;
+		cube.position.y +=7.9;
 		cube.position.x -=60;
 		cube.position.z +=20;
 		scene.add( cube );
+		collidableObjects.push(cube);
 
 		var geometry = new THREE.BoxGeometry( 5, 0.5, 20 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
 		var cube = new THREE.Mesh( geometry, material );
-		cube.position.y +=7.8;
+		cube.position.y +=7.9;
 		cube.position.x -=60;
 		cube.position.z -=20;
 		scene.add( cube );
+		collidableObjects.push(cube);
 
 		var geometry = new THREE.BoxGeometry( 5, 10, 0.5 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
@@ -1472,6 +1939,7 @@ loader.load(
 		cube.position.x -=60;
 		cube.position.z -=29.75;
 		scene.add( cube );
+		collidableObjects.push(cube);
 
 		var geometry = new THREE.BoxGeometry( 5, 10, 0.5 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
@@ -1480,6 +1948,7 @@ loader.load(
 		cube.position.x -=60;
 		cube.position.z -=10.25;
 		scene.add( cube );
+		collidableObjects.push(cube);
 
 		var geometry = new THREE.BoxGeometry( 5, 10, 0.5 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
@@ -1488,6 +1957,7 @@ loader.load(
 		cube.position.x -=60;
 		cube.position.z +=29.75;
 		scene.add( cube );
+		collidableObjects.push(cube);
 
 		var geometry = new THREE.BoxGeometry( 5, 10, 0.5 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
@@ -1496,6 +1966,7 @@ loader.load(
 		cube.position.x -=60;
 		cube.position.z +=10.25;
 		scene.add( cube );
+		collidableObjects.push(cube);
 
 		//board
 
@@ -1506,6 +1977,7 @@ loader.load(
 		cube.position.x +=0;
 		cube.position.z -=49.5;
 		scene.add( cube );
+		collidableObjects.push(cube);
 
 		var geometry = new THREE.BoxGeometry( 30, 15, 1 );
 		var material = new THREE.MeshBasicMaterial( {color: 0xA9A9A9} );
@@ -1514,6 +1986,7 @@ loader.load(
 		cube.position.x +=0;
 		cube.position.z -=49.4;
 		scene.add( cube );
+		collidableObjects.push(cube);
 
 		var geometry = new THREE.BoxGeometry( 37, 1, 2 );
 		var material = new THREE.MeshBasicMaterial( {color: 0x3b3b3b} );
@@ -1522,105 +1995,109 @@ loader.load(
 		cube.position.x +=0;
 		cube.position.z -=49;
 		scene.add( cube );
-
-		//map
-
-		loader.load(
-			'examples/models/gltf/map/scene.gltf',
-			function ( gltf ) {
-				scene.add( gltf.scene );
-				gltf.scene.scale.x = gltf.scene.scale.y = gltf.scene.scale.z = 2;
-				gltf.scene.rotation.y += Math.PI / 2;
-				gltf.scene.position.y += 12;
-				gltf.scene.position.x += 59.6;
-				gltf.scene.position.z -= 5;
-
-			},
-
-		);
+		collidableObjects.push(cube);
 
 			//renderer
-
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				document.body.appendChild( renderer.domElement );
-
 				window.addEventListener( 'resize', onWindowResize, false );
-
 			}
 
 			function onWindowResize() {
-
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
-
 				renderer.setSize( window.innerWidth, window.innerHeight );
-
 			}
 
+			// Converts degrees to radians
+				function degreesToRadians(degrees) {
+  			return degrees * Math.PI / 180;
+			}
+
+			// Converts radians to degrees
+				function radiansToDegrees(radians) {
+  			return radians * 180 / Math.PI;
+			}
+
+			function detectPlayerCollision() {
+						var rotationMatrix;
+						var cameraDirection = controls.getDirection(new THREE.Vector3(0, 0, 0)).clone();
+					if (moveBackward) {
+					rotationMatrix = new THREE.Matrix4();
+					rotationMatrix.makeRotationY(degreesToRadians(180));
+			}
+			else if (moveLeft) {
+					rotationMatrix = new THREE.Matrix4();
+					rotationMatrix.makeRotationY(degreesToRadians(90));
+			}
+			else if (moveRight) {
+					rotationMatrix = new THREE.Matrix4();
+					rotationMatrix.makeRotationY(degreesToRadians(270));
+			}
+			// Player is not moving forward, apply rotation matrix needed
+			if (rotationMatrix !== undefined) {
+					cameraDirection.applyMatrix4(rotationMatrix);
+			}
+			// Apply ray to player camera
+			var rayCaster = new THREE.Raycaster(controls.getObject().position, cameraDirection);
+
+			// If our ray hit a collidable object, return true
+			if (rayIntersect(rayCaster, PLAYERCOLLISIONDISTANCE)) {
+					return true;
+			} else {
+					return false;
+			}
+	}
+	function rayIntersect(ray, distance) {
+			var intersects = ray.intersectObjects(collidableObjects);
+			for (var i = 0; i < intersects.length; i++) {
+					// Check if there's a collision
+					if (intersects[i].distance < distance) {
+							return true;
+					}
+			}
+			return false;
+	}
+			// If no collision and a movement key is being pressed, apply movement velocity
 
 			function animate() {
-
 				requestAnimationFrame( animate );
-
-				setTimeout(function(){
-				document.getElementById('loading-screen').className = 'loading-screen.fade-out';
-				}, 5000);
-
 				if ( controls.isLocked === true ) {
-
-					raycaster.ray.origin.copy( controls.getObject().position );
-					raycaster.ray.origin.y -= 10;
-
-					// var intersections = raycaster.intersectObjects( objects );
-
-					// var onObject = intersections.length > 0;
-
 					var time = performance.now();
 					var delta = ( time - prevTime ) / 900;
-
 					velocity.x -= velocity.x * 10.0 * delta;
 					velocity.z -= velocity.z * 10.0 * delta;
-
 					velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
-
 					direction.z = Number( moveForward ) - Number( moveBackward );
 					direction.x = Number( moveRight ) - Number( moveLeft );
 					direction.normalize(); // this ensures consistent movements in all directions
-
-					if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
-					if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
-
-					controls.moveRight( - velocity.x * delta );
-					controls.moveForward( - velocity.z * delta );
-
-					controls.getObject().position.y += ( velocity.y * delta ); // new behavior
-
-					if ( controls.getObject().position.y < 10 ) {
-
-						velocity.y = 0;
-						controls.getObject().position.y = 10;
-
-						canJump = true;
-
+					if (detectPlayerCollision() == false) {
+							if ( moveForward || moveBackward ) velocity.z -= direction.z * PLAYERSPEED;
+							if ( moveLeft || moveRight ) velocity.x -= direction.x * PLAYERSPEED;
+							if ( moveFast ) velocity.z -= direction.z += 0.05;
+							controls.moveRight( - velocity.x * PLAYERSPEED );
+							controls.moveForward( - velocity.z * PLAYERSPEED );
+							controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+					} else {
+							// Collision or no movement key being pressed. Stop movememnt
+							velocity.x = 0;
+							velocity.z = 0;
+							PLAYERSPEED = 0.5;
 					}
-
+					if ( controls.getObject().position.y < 11 ) {
+						velocity.y = 10;
+						controls.getObject().position.y = 11;
+						canJump = true;
+					}
 					prevTime = time;
-
 				}
-
-
 				renderer.render( scene, camera );
-
 			}
-
 			function onTransitionEnd( event ) {
-
 	event.target.remove();
-
 }
-
 		</script>
 	</body>
 </html>
